@@ -10,7 +10,6 @@ const PWD = config.pwd;
 const express = require('express');
 const axios = require('axios');
 const bodyParser = require('body-parser');
-const pathToRegexp = require('path-to-regexp');
 
 const app = express();
 app.use(bodyParser.urlencoded({extended: true}));
@@ -28,7 +27,7 @@ app.post('/issues', (req, res) => {
         .then(res => getIssues(res.headers['set-cookie'].join(';'), req.body.text))
         .then(res => sendMsg(req.body.response_url, makeIssuesMsgPayload(res.data)))
         .then(res => console.log(res.data))
-        .catch(err => console.log(err.message));
+        .catch(err => console.log(err.response.data));
 });
 
 
@@ -47,9 +46,9 @@ function login() {
         );
 }
 
-function getIssues(setCookie, versionQuery) {
+function getIssues(setCookie, version) {
     return axios
-        .get(JIRA_SERVER_DOMAIN + '/rest/api/2/search?jql=project=ok and component=Android and ' + versionQuery, {
+        .get(JIRA_SERVER_DOMAIN + '/rest/api/2/search?jql=project=ok and component=Android and fixVersion="' + version + '"', {
             headers: {
                 'Cookie': setCookie,
                 'Content-Type': 'application/json'
@@ -60,7 +59,7 @@ function getIssues(setCookie, versionQuery) {
 function makeIssuesMsgPayload(data) {
     let text = '';
     data.issues.forEach(issue => {
-        text += '\n' + issue.key.substring(3) + ' ' + issue.fields['customfield_11013'];
+        text += '\n' + JIRA_SERVER_DOMAIN + '/browse/' + issue.key + ' ' + issue.fields['customfield_11013'];
     });
 
     return {
