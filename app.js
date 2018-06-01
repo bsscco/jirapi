@@ -59,7 +59,9 @@ function getIssues(setCookie, version) {
 function makeIssuesMsgPayload(data) {
     let text = '';
     data.issues.forEach(issue => {
-        text += '\n' + JIRA_SERVER_DOMAIN + '/browse/' + issue.key + ' ' + issue.fields['customfield_11013'];
+        text += '\n' + JIRA_SERVER_DOMAIN + '/browse/' + issue.key;
+        text += '\n ' + issue.fields['customfield_11013'];
+        text += '\n\n\n\n\n';
     });
 
     return {
