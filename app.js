@@ -48,7 +48,7 @@ function login() {
 
 function getIssues(setCookie, version) {
     return axios
-        .get(JIRA_SERVER_DOMAIN + '/rest/api/2/search?jql=project=ok and component=Android and fixVersion="' + version + '"', {
+        .get(JIRA_SERVER_DOMAIN + '/rest/api/2/search?jql=project=ok and component=Android and status=Done and fixVersion="' + version + '"', {
             headers: {
                 'Cookie': setCookie,
                 'Content-Type': 'application/json'
