@@ -27,7 +27,7 @@ app.post('/issues', (req, res) => {
         .then(res => getIssues(res.headers['set-cookie'].join(';'), req.body.text))
         .then(res => sendMsg(req.body.response_url, makeIssuesMsgPayload(res.data)))
         .then(res => console.log(res.data))
-        .catch(err => console.log(err.response.data));
+        .catch(err => console.log(err.toString()));
 });
 
 
@@ -48,7 +48,7 @@ function login() {
 
 function getIssues(setCookie, version) {
     return axios
-        .get(JIRA_SERVER_DOMAIN + '/rest/api/2/search?jql=project=ok and component=Android and status=Done and fixVersion="' + version + '"', {
+        .get(JIRA_SERVER_DOMAIN + '/rest/api/2/search?jql=project=ok and component=Android and status in ("ready for front", "front in develop", "done") and fixVersion="' + version + '"', {
             headers: {
                 'Cookie': setCookie,
                 'Content-Type': 'application/json'
@@ -59,9 +59,15 @@ function getIssues(setCookie, version) {
 function makeIssuesMsgPayload(data) {
     let text = '';
     data.issues.forEach(issue => {
+        const bs_summary = issue.fields['customfield_11013'];
         text += '\n' + JIRA_SERVER_DOMAIN + '/browse/' + issue.key;
-        text += '\n ' + issue.fields['customfield_11013'];
-        text += '\n\n\n\n\n';
+        if (/(@.+?)[ ,@\n\r]|(@.+?)$/g.test(bs_summary)) {
+            text += '\n' + bs_summary.match(/(@.+?)[ ,@\n\r]|(@.+?)$/g).join('');
+        }
+        text += '\n```';
+        text += '\n' + bs_summary;
+        text += '\n```';
+        text += '\n\n\n\n';
     });
 
     return {
@@ -86,3 +92,10 @@ app.listen(PORT, () => {
     console.log(`App listening on port ${PORT}`);
     console.log('Press Ctrl+C to quit.');
 });
+
+// 테스트 코드
+// login()
+//     .then(res => getIssues(res.headers['set-cookie'].join(';'), 'And 8.11.1'))
+//     .then(res => sendMsg('', makeIssuesMsgPayload(res.data)))
+//     .then(res => console.log(res.data))
+//     .catch(err => console.log(err.toString()));
