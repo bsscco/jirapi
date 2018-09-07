@@ -24,7 +24,7 @@ app.post('/issues', (req, res) => {
     res.send('');
 
     login()
-        .then(res => getIssues(res.headers['set-cookie'].join(';'), req.body.text))
+        .then(res => getIssues(res.headers['set-cookie'].join(';'), 'And ' + req.body.text))
         .then(res => sendMsg(req.body.response_url, makeIssuesMsgPayload(res.data)))
         .then(res => console.log(res.data))
         .catch(err => console.log(err.toString()));
