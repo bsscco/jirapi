@@ -25,7 +25,7 @@ app.post('/issues', (req, res) => {
 
     login()
         .then(res => getIssues(res.headers['set-cookie'].join(';'), 'And ' + req.body.text))
-        .then(res => sendMsg(req.body.response_url, makeIssuesMsgPayload(res.data)))
+        .then(res => sendMsg(req.body.response_url, makeIssuesMsgPayload(res.data, res.body.text.contains('-nm'))))
         .then(res => console.log(res.data))
         .catch(err => console.log(err.toString()));
 });
@@ -56,13 +56,15 @@ function getIssues(setCookie, version) {
         });
 }
 
-function makeIssuesMsgPayload(data) {
+function makeIssuesMsgPayload(data, noMention) {
     let text = '';
     data.issues.forEach(issue => {
         const bs_summary = issue.fields['customfield_11013'];
         text += '\n' + JIRA_SERVER_DOMAIN + '/browse/' + issue.key;
-        if (/(@.+?)[ ,@\n\r]|(@.+?)$/g.test(bs_summary)) {
-            text += '\n' + bs_summary.match(/(@.+?)[ ,@\n\r]|(@.+?)$/g).join('');
+        if (!noMention) {
+            if (/(@.+?)[ ,@\n\r]|(@.+?)$/g.test(bs_summary)) {
+                text += '\n' + bs_summary.match(/(@.+?)[ ,@\n\r]|(@.+?)$/g).join('');
+            }
         }
         text += '\n```';
         text += '\n' + bs_summary;
