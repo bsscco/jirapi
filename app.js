@@ -24,8 +24,8 @@ app.post('/issues', (req, res) => {
     res.send('');
 
     login()
-        .then(res => getIssues(res.headers['set-cookie'].join(';'), 'And ' + req.body.text))
-        .then(res => sendMsg(req.body.response_url, makeIssuesMsgPayload(res.data, res.body.text.contains('-nm'))))
+        .then(res => getIssues(res.headers['set-cookie'].join(';'), 'And ' + req.body.text.split(' ')[0]))
+        .then(res => sendMsg(req.body.response_url, makeIssuesMsgPayload(res.data, req.body.text.includes('-nm'), req.body.text.includes('-b'), req.body.text.includes('-f'))))
         .then(res => console.log(res.data))
         .catch(err => console.log(err.toString()));
 });
@@ -56,9 +56,19 @@ function getIssues(setCookie, version) {
         });
 }
 
-function makeIssuesMsgPayload(data, noMention) {
+function makeIssuesMsgPayload(data, noMention, bugOnly, featureOnly) {
     let text = '';
     data.issues.forEach(issue => {
+        if (bugOnly) {
+            if (issue.fields.issuetype.id !== '10103'/*BUG_TYPE*/) {
+                return;
+            }
+        }
+        else if (featureOnly) {
+            if (issue.fields.issuetype.id !== '10101'/*TASK_TYPE*/ && issue.fields.issuetype.id !== '10102'/*SUB_TASK_TYPE*/) {
+                return;
+            }
+        }
         const bs_summary = issue.fields['customfield_11013'];
         text += '\n' + JIRA_SERVER_DOMAIN + '/browse/' + issue.key;
         if (!noMention) {
